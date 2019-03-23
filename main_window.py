@@ -1,13 +1,14 @@
-from PyQt5.QtWidgets import (QGridLayout, QApplication, QLabel, QWidget, QPushButton, QTextEdit, QMessageBox,
-                             QListWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QMainWindow, QAction, QColorDialog)
+from PyQt5.QtWidgets import (QGridLayout, QApplication, QLabel, QWidget, QPushButton, QTextEdit, QMessageBox, QStyleFactory,
+                             QListWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QMainWindow, QAction, QColorDialog,
+                             QFileDialog)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 import sys
 import sqlite3
 from sqlite3 import Error
 import datetime
-from app_windows import SettingsWindow
-from settings import settings_dict
+from app_windows import SettingsWindow, AboutWindow
+
 
 
 
@@ -16,7 +17,12 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setGeometry(300, 100, 700, 600)
+        conn = create_connection("database.db")
+
+        self.set_settings(conn)
+
+
+
         self.setWindowTitle("Scribe 2.0")
 
         self.tab_widget = Tabs(self)
@@ -26,19 +32,19 @@ class MainWindow(QMainWindow):
 
         self.statusBar()
 
-
-
+        #print(self.style().objectName())   #print application style
 
         menuSettings = QAction("&Settings", self)
         menuSettings.setStatusTip("Set settings...")
         menuSettings.triggered.connect(self.menuSettings_opt)
 
-        menuImport = QAction("&Import", self)
-        menuImport.setStatusTip("Import database...")
-
+        menuImport = QAction("&Import database", self)
+        menuImport.setStatusTip("Import notes from other source...")
+        menuImport.triggered.connect(lambda: self.menuImport_opt(conn))
 
         menuAbout = QAction("&About", self)
         menuAbout.setStatusTip("Information about the application...")
+        menuAbout.triggered.connect(self.menuAbout_opt)
 
         menuExit = QAction("&Exit",self)
         menuExit.setStatusTip("Exit application...")
@@ -57,6 +63,35 @@ class MainWindow(QMainWindow):
         self.display.show()
 
 
+    def menuImport_opt(self,conn_old):
+        file_path = QFileDialog.getOpenFileName(self, 'Select database...', 'c:\\',"Database (*.db)")
+        if file_path[0] == "":
+            return
+
+        try:
+            conn_new = sqlite3.connect(file_path[0])
+
+            cursor_new = conn_new.cursor()
+            cursor_new.execute("SELECT title,tag1,tag2,content,datetime FROM notes")
+            store_content = cursor_new.fetchall()
+
+            cursor_old = conn_old.cursor()
+
+            for row in store_content:
+                cursor_old.execute("INSERT INTO notes(title,tag1,tag2,content,datetime) VALUES(?,?,?,?,?)", row)
+
+            conn_old.commit()
+            conn_old.close()
+        except:
+            QMessageBox.about(self,"Invalid Input Error","There is something wrong with format of a database you want to merge with local database.\n"
+                                                         "Database should contain 'notes' table with id[PK], title [text], tag1[text], tag2[text], content"
+                                                         "[text], datetime[text] columns.")
+
+
+
+    def menuAbout_opt(self):
+        self.display = AboutWindow()
+        self.display.show()
 
 
 
@@ -69,6 +104,31 @@ class MainWindow(QMainWindow):
         else:
             pass
 
+    def set_settings(self, conn):
+        sql_statement = "SELECT stay_on_top, style, size FROM settings WHERE id = 1"
+
+        cur = conn.cursor()
+        cur.execute(sql_statement)
+
+        rows = cur.fetchall()
+
+        if rows[0][0] == 2:
+            QMainWindow.__init__(self, None, Qt.WindowStaysOnTopHint)
+
+        if rows[0][1] == 0:
+            QApplication.setStyle(QStyleFactory.create("Windows"))
+        elif rows[0][1] == 1:
+            QApplication.setStyle(QStyleFactory.create("WindowsVista"))
+        elif rows[0][1] == 2:
+            QApplication.setStyle(QStyleFactory.create("Fusion"))
+
+        if rows[0][2] == 0:
+            self.setGeometry(300, 100, 300, 350)
+        elif rows[0][2] == 1:
+            self.setGeometry(300, 100, 700, 600)
+        elif rows[0][2] == 2:
+            self.setGeometry(300, 100, 1000, 700)
+
 
 class Tabs(QWidget):
 
@@ -78,7 +138,7 @@ class Tabs(QWidget):
     def __init__(self, parent):
         super(QWidget, self).__init__(parent)
 
-
+        conn = create_connection("database.db")
 
         self.tabs = QTabWidget()
         self.tab1 = QWidget()
@@ -89,7 +149,7 @@ class Tabs(QWidget):
         self.tabs.addTab(self.tab1, "Search")
         self.tabs.addTab(self.tab2, "Add")
 
-        conn = create_connection("C:\\Users\Darciu\PycharmProjects\Scribe 2.0\database.db")
+
 
         self.tabSearch(conn)
         self.tabAddEdit(conn)
@@ -106,8 +166,7 @@ class Tabs(QWidget):
     def indexList_clear(cls):
         cls.indexList = []
 
-    def printI(self):
-        return self.searchList.currentRow()
+
 
     def tabSearch(self,conn):
         """
@@ -193,8 +252,15 @@ class Tabs(QWidget):
 
     def click_searchBTN(self, conn):
 
+        if self.searchField.text().upper() == "ALL":
+            sql_statement = "SELECT id, title, tag1, tag2, content, datetime FROM notes"
+        else:
+            sql_statement = "SELECT id, title, tag1, tag2, content, datetime FROM notes WHERE title LIKE UPPER('%{}%')".format(
+                self.searchField.text())
+
+
+
         if self.searchField.text() != "":
-            sql_statement = "SELECT id, title, tag1, tag2, content, datetime FROM notes WHERE title LIKE UPPER('%{}%')".format(self.searchField.text())
 
             cur = conn.cursor()
             cur.execute(sql_statement)
@@ -205,7 +271,7 @@ class Tabs(QWidget):
             self.indexList_clear()
 
             for row in rows:
-                self.searchList.addItem(row[1] + " #" + row[2] + ", #" + row[3] + " || last edit: " + row[5])
+                self.searchList.addItem(row[1] + "; 1#" + row[2] + "; 2#" + row[3] + "; || last edit: " + row[5])
                 self.indexList_append(int(row[0]))
         else:
             self.searchList.clear()
@@ -399,7 +465,7 @@ class Tabs(QWidget):
 
 
         if self.checkAddEditConditions():
-            print("Warunki nie są spełnione")
+            QMessageBox.about(self,"Empty fields","Some of required fields are empty. You cannot add this record!")
             return None
 
 
@@ -425,7 +491,7 @@ class Tabs(QWidget):
     def editRecord(self,conn):
 
         if self.checkAddEditConditions():
-            print("Warunki nie są spełnione")
+            QMessageBox.about(self,"Empty fields","Some of required fields are empty. You cannot edit this record!")
             return None
 
         sql_sentence = ''' UPDATE notes
@@ -549,7 +615,7 @@ def main():
                             title text NOT NULL,
                             tag1 text NOT NULL,
                             tag2 text,
-                            content blob NOT NULL,
+                            content text NOT NULL,
                             datetime text NOT NULL
                             );
                         """
@@ -562,7 +628,7 @@ def main():
                             """
 
 
-    conn = create_connection("C:\\Users\Darciu\PycharmProjects\Scribe 2.0\database.db")
+    conn = create_connection("database.db")
     if conn is not None:
         create_table(conn,sql_create_table)
         create_table(conn,sql_create_settings)
@@ -571,7 +637,7 @@ def main():
 
     else:
         print("Error! Application couldn't run the database.")
-
+    conn.close()
     app = QApplication([])
     window = MainWindow()
     window.show()
