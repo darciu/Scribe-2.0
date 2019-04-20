@@ -1,18 +1,18 @@
-#Scribe 2.0
+# Scribe 2.0
 
-##Brief description
+## Brief description
 
 Scribe is a useful application which allows to store text based notes with formatting. It uses sqlite3 database which is provided with Python installation. You don't need to configure anything before using the application.
 
-##Prerequisites
+## Prerequisites
 This code was written in Python ver. 3.7.
 Please install PyQt5
 
-##Start up
+## Start up
 
 Run main_window.py in your IDE
 
-#Features
+## Features
 
 Scribe 2.0 main features are:
 
@@ -52,6 +52,6 @@ Typing 'all' in search field there will be displayed all records.
 
 5. You can find executable file in folder 'dist'. In this case it will be named 'main_window.exe'. You can rename it and make Desktop shortcut.
 
-##Author
+## Author
 
 Dariusz Giemza 2019
