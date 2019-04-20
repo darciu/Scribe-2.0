@@ -16,21 +16,21 @@ Run main_window.py in your IDE
 
 Scribe 2.0 main features are:
 
--add notes,
+- add notes,
 
--search and display notes (double click on list of results),
+- search and display notes (double click on list of results),
 
--edit notes,
+- edit notes,
 
--format text within notes,
+- format text within notes,
 
 Settings tab:
 
--stay on top (application's window stays over other windows),
+- stay on top (application's window stays over other windows),
 
--set style of application,
+- set style of application,
 
--set size of application,
+- set size of application,
 
 Other:
 
