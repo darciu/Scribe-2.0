@@ -192,6 +192,7 @@ class Tabs(QWidget):
         self.searchList = QListWidget()
         self.editBTN = QPushButton("Edit")
         self.searchField = QLineEdit()
+        self.deleteBTN = QPushButton("Delete")
 
 
 
@@ -199,11 +200,13 @@ class Tabs(QWidget):
         self.searchBTN.clicked.connect(lambda: self.click_searchBTN(conn))
         self.editBTN.clicked.connect(lambda: self.click_editBTN(conn))
         self.searchList.doubleClicked.connect(lambda: self.doubleClickDisplay(conn))
+        self.deleteBTN.clicked.connect(lambda: self.click_deleteBTN(conn))
 
         self.display_notepadSearch.setReadOnly(True)
         self.titleSearchField.setReadOnly(True)
         self.tag1SearchField.setReadOnly(True)
         self.tag2SearchField.setReadOnly(True)
+
 
 
         #layout construction
@@ -222,6 +225,7 @@ class Tabs(QWidget):
         self.layoutSearch1_3.addWidget(self.searchField)
         self.layoutSearch1_3.addWidget(self.searchList)
         self.layoutSearch1_3.addWidget(self.editBTN)
+        self.layoutSearch1_3.addWidget(self.deleteBTN)
 
 
 
@@ -290,7 +294,6 @@ class Tabs(QWidget):
 
     def click_editBTN(self,conn):
         if self.searchList.currentRow() == -1:
-            self.searchList.clear()
             return None
 
         self.tabs.setCurrentIndex(1)
@@ -317,7 +320,26 @@ class Tabs(QWidget):
 
 
 
+    def click_deleteBTN(self, conn):
+        if self.searchList.currentRow() == -1:
+            return None
 
+        choice = QMessageBox.question(self, 'Delete', 'Do you really want to delete this record?',
+                                      QMessageBox.Yes | QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+            self.deleteRecord(conn)
+        else:
+            pass
+
+
+    def deleteRecord(self,conn):
+
+        sql_statement = "DELETE FROM notes WHERE id = {}".format(self.indexList[self.searchList.currentRow()])
+
+        cur = conn.cursor()
+        cur.execute(sql_statement)
+        self.searchList.clear()
 
     #=====================ADD EDIT TAB=============================
 
