@@ -43,10 +43,14 @@ Typing 'all' in search field there will be displayed all records.
 ## Executable version
 
 1. Install pyinstaller. For this purpose you can use pip installer. Type 'pip install pyinstaller' in your Command Prompt.
+
 2. Add new path to 'PATH' Environment Variable to C:\Python3.x\Scripts\ location. This depends on where your Python is installed.
+
 3.Go to the folder where your python script is located in. Open command window in this folder (shift + right click).
+
 4.Type in 'pyinstaller -w[python_script_name].
-5.The executable file will be named 'main_window.exe'. You can rename it and make Desktop shortcut.
+
+5.You can find executable file in folder 'dist'. In this case it will be named 'main_window.exe'. You can rename it and make Desktop shortcut.
 
 ##Author
 
