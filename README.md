@@ -2,11 +2,11 @@
 
 ## Brief description
 
-Scribe is a useful application which allows to store text based notes with formatting. It uses sqlite3 database which is provided with Python installation. You don't need to configure anything before using the application.
+Scribe is a useful application which allows to store text based notes with formatting. It uses sqlite3 database which is provided with Python installation. You don't need to configure anything before usage of the application.
 
 ## Prerequisites
 This code was written in Python ver. 3.7.
-Please install PyQt5
+For use, install PyQt5 ('pip install PyQt5').
 
 ## Start up
 
